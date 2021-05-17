@@ -1,0 +1,45 @@
+version: 2.1
+orbs:
+  node: circleci/node@4.1     # Used for the Frontend tests
+  python: circleci/python@1.2 # Used for the Backend tests
+
+parameters:
+  run-frontend:
+    type: boolean
+    default: false
+  run-backend:
+    type: boolean
+    default: false
+
+jobs:
+  frontend-test:
+    docker:
+      - image: cimg/node:15.1
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          name: Run tests
+          command: npm test
+
+
+  backend-test:
+    docker:
+      - image: cimg/python:3.8
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run:
+          name: Run tests
+          command: pytest
+
+workflows:
+  frontend:
+    when: << pipeline.parameters.run-frontend >>
+    jobs:
+      - frontend-test
+  backend-test:
+    when: << pipeline.parameters.run-backend >>
+    jobs:
+      - backend-test
