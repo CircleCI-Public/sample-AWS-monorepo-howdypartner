@@ -20,11 +20,11 @@ jobs:
     steps:
       - checkout
       - node/install-packages:
-          override-ci-command: npm install -g
+          override-ci-command: npm install
           app-dir: ./frontend
       - run:
           name: Run tests
-          command: cd fronted/ && npm test:unit
+          command: cd frontend/ && npm test:unit
   build_docker_image:
     machine:
       image: ubuntu-2004:202101-01
