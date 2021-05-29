@@ -1,6 +1,6 @@
 version: 2.1
 orbs:
-  node: circleci/node@4.2.0   # Used for the Frontend tests
+  node: circleci/node@4.4.0   # Used for the Frontend tests
   python: circleci/python@1.2 # Used for the Backend tests
   docker: circleci/docker@1.5.0
   terraform: circleci/terraform@2.0.0  
@@ -21,6 +21,7 @@ jobs:
       - checkout
       - node/install-packages:
           override-ci-command: npm install
+          app-dir: ./frontend
       - run:
           name: Run tests
           command: npm test:unit
@@ -32,7 +33,8 @@ jobs:
       - checkout
       - node/install-packages:
           override-ci-command: npm install
-      - run: ionic build
+          app-dir: ./frontend          
+      - run: cd frontend/ && ionic build
       - docker/check
       - docker/build:
           image: $DOCKER_LOGIN/frontend
