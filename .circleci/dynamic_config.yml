@@ -19,19 +19,19 @@ jobs:
       - image: cimg/node:15.1
     steps:
       - checkout
-      - run: cd frontend/
-      - node/install-packages
+      - node/install-packages:
+          override-ci-command: npm install
       - run:
           name: Run tests
-          command: npm test
+          command: npm test:unit
   build_docker_image:
     machine:
       image: ubuntu-2004:202101-01
     resource_class: medium
     steps:
       - checkout
-      - run: cd frontend/
-      - run: npm install
+      - node/install-packages:
+          override-ci-command: npm install
       - run: ionic build
       - docker/check
       - docker/build:
