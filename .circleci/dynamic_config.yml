@@ -20,11 +20,11 @@ jobs:
     steps:
       - checkout
       - node/install-packages:
-          override-ci-command: npm install
+          override-ci-command: npm install -g
           app-dir: ./frontend
       - run:
           name: Run tests
-          command: npm test:unit
+          command: cd fronted/ && npm test:unit
   build_docker_image:
     machine:
       image: ubuntu-2004:202101-01
@@ -32,7 +32,7 @@ jobs:
     steps:
       - checkout
       - node/install-packages:
-          override-ci-command: npm install
+          override-ci-command: npm install -g
           app-dir: ./frontend          
       - run: cd frontend/ && ionic build
       - docker/check
@@ -89,6 +89,7 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
+          app-dir: ./backend
       - run:
           name: Run tests
           command: pytest
