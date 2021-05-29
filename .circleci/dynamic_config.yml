@@ -1,7 +1,9 @@
 version: 2.1
 orbs:
-  node: circleci/node@4.1     # Used for the Frontend tests
+  node: circleci/node@4.2.0   # Used for the Frontend tests
   python: circleci/python@1.2 # Used for the Backend tests
+  docker: circleci/docker@1.5.0
+  terraform: circleci/terraform@2.0.0  
 
 parameters:
   run-frontend:
@@ -17,12 +19,67 @@ jobs:
       - image: cimg/node:15.1
     steps:
       - checkout
+      - run: cd frontend/
       - node/install-packages
       - run:
           name: Run tests
           command: npm test
-
-
+  build_docker_image:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: medium
+    steps:
+      - checkout
+      - run: cd frontend/
+      - run: npm install
+      - run: ionic build
+      - docker/check
+      - docker/build:
+          image: $DOCKER_LOGIN/frontend
+          tag: 0.1.<< pipeline.number >>
+      - docker/push:
+          image: $DOCKER_LOGIN/frontend
+          tag: 0.1.<< pipeline.number >>
+  deploy_aws_ecs:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: medium
+    steps:
+      - checkout
+      - run:
+          name: Create .terraformrc file locally
+          command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
+      - terraform/install:
+          terraform_version: "0.14.10"
+          arch: "amd64"
+          os: "linux"
+      - terraform/init:
+          path: ./frontend/terraform/ecs
+      - terraform/plan:
+          path: ./frontend/terraform/ecs
+          workspace: ""
+      - terraform/apply:
+          path: ./frontend/terraform/ecs
+          var: "docker_img_name=${DOCKER_LOGIN}/frontend,docker_img_tag=0.1.<< pipeline.number >>"
+  destroy_aws_ecs:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: medium
+    steps:
+      - checkout
+      - run:
+          name: Create .terraformrc file locally
+          command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
+      - terraform/install:
+          terraform_version: "0.14.2"
+          arch: "amd64"
+          os: "linux"
+      - terraform/init:
+          path: ./frontend/terraform/ecs
+      - terraform/plan:
+          path: ./frontend/terraform/ecs
+      - terraform/destroy:
+          path: ./frontend/terraform/ecs
   backend-test:
     docker:
       - image: cimg/python:3.8
@@ -39,6 +96,15 @@ workflows:
     when: << pipeline.parameters.run-frontend >>
     jobs:
       - frontend-test
+      - build_docker_image
+      - deploy_aws_ecs
+      - approve_destroy:
+          type: approval
+          requires:
+            - deploy_aws_ecs
+      - destroy_aws_ecs:
+          requires:
+            - approve_destroy      
   backend-test:
     when: << pipeline.parameters.run-backend >>
     jobs:
