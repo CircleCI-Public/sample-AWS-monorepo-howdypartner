@@ -18,7 +18,7 @@ jobs:
       - image: cimg/node:15.1
     steps:
       - checkout
-       - run:
+      - run:
           name: Run tests
           command: |
             cd frontend/
@@ -40,7 +40,6 @@ jobs:
             docker build -t $DOCKER_LOGIN/frontend -t $DOCKER_LOGIN/frontend:0.1.<< pipeline.number >> .
             echo $DOCKER_PASSWORD | docker login -u $DOCKER_LOGIN --password-stdin
             docker push -a $DOCKER_LOGIN/frontend        
- 
   deploy_aws_ecs:
     machine:
       image: ubuntu-2004:202101-01
