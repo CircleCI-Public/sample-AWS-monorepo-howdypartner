@@ -42,8 +42,8 @@ jobs:
           npm install -g @ionic/cli
           ionic build
           docker build -t $DOCKER_LOGIN/frontend -t $DOCKER_LOGIN/frontend:0.1.<< pipeline.number >> .
-          echo $DOCKER_PWD | docker login -u $DOCKER_LOGIN --password-stdin
-          docker push $DOCKER_LOGIN/$IMAGE_NAME          
+          echo $DOCKER_PASSWORD | docker login -u $DOCKER_LOGIN --password-stdin
+          docker push $DOCKER_LOGIN/frontend        
       # - docker/check
       # - docker/build:
       #     path: ./frontend
