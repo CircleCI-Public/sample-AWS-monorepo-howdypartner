@@ -11,12 +11,7 @@
     "essential": true,
     "name": "aws-app",
     "image": "${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}",
-    "environment": [
-      {
-        "name": "VUE_APP_API_URL",
-        "value": "https://sample-python-cfd.herokuapp.com/"
-      }
-    ],
+    "environment": [],
     "command": [],
     "volumesFrom": [],
     "logConfiguration": {
