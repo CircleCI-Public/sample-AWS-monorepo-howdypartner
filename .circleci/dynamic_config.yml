@@ -27,7 +27,7 @@ jobs:
           command: |
             cd frontend/
             npm install -g
-            npm test
+            npm test:unit
   build_docker_image:
     machine:
       image: ubuntu-2004:202101-01
@@ -44,6 +44,7 @@ jobs:
           ionic build
       - docker/check
       - docker/build:
+          path: ./frontend
           image: $DOCKER_LOGIN/frontend
           tag: 0.1.<< pipeline.number >>
       - docker/push:
