@@ -24,7 +24,7 @@ jobs:
       #     app-dir: ./frontend
       - run:
           name: Run tests
-          command: cd frontend/ && npm install && npm test:unit
+          command: cd frontend/ && npm install && npm test
   build_docker_image:
     machine:
       image: ubuntu-2004:202101-01
@@ -34,7 +34,11 @@ jobs:
       # - node/install-packages:
       #     override-ci-command: npm install
       #     app-dir: ./frontend          
-      - run: cd frontend/ && npm install && npm install @ionic/cli && ionic build
+      - run: |
+          cd frontend/ 
+          npm install 
+          npm install @ionic/cli
+          ionic build
       - docker/check
       - docker/build:
           image: $DOCKER_LOGIN/frontend
