@@ -18,10 +18,7 @@ jobs:
       - image: cimg/node:15.1
     steps:
       - checkout
-      # - node/install-packages:
-      #     override-ci-command: npm install
-      #     app-dir: ./frontend
-      - run:
+       - run:
           name: Run tests
           command: |
             cd frontend/
@@ -33,25 +30,17 @@ jobs:
     resource_class: medium
     steps:
       - checkout
-      # - node/install-packages:
-      #     override-ci-command: npm install
-      #     app-dir: ./frontend          
-      - run: |
-          cd frontend/ 
-          npm install -g
-          npm install -g @ionic/cli
-          ionic build
-          docker build -t $DOCKER_LOGIN/frontend -t $DOCKER_LOGIN/frontend:0.1.<< pipeline.number >> .
-          echo $DOCKER_PASSWORD | docker login -u $DOCKER_LOGIN --password-stdin
-          docker push -a $DOCKER_LOGIN/frontend        
-      # - docker/check
-      # - docker/build:
-      #     path: ./frontend
-      #     image: $DOCKER_LOGIN/frontend
-      #     tag: 0.1.<< pipeline.number >>
-      # - docker/push:
-      #     image: $DOCKER_LOGIN/frontend
-      #     tag: 0.1.<< pipeline.number >>
+      - run: 
+          name: Build docker image
+          command: |
+            cd frontend/ 
+            npm install -g
+            npm install -g @ionic/cli
+            ionic build
+            docker build -t $DOCKER_LOGIN/frontend -t $DOCKER_LOGIN/frontend:0.1.<< pipeline.number >> .
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_LOGIN --password-stdin
+            docker push -a $DOCKER_LOGIN/frontend        
+ 
   deploy_aws_ecs:
     machine:
       image: ubuntu-2004:202101-01
