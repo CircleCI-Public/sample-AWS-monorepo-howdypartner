@@ -17,27 +17,14 @@ jobs:
     docker:
       - image: cimg/node:15.1
     steps:
-      # Checkout the code as the first step.
       - checkout
-      # Next, the node orb's install-packages step will install the dependencies from a package.json.
-      # The orb install-packages step will also automatically cache them for faster future runs.
       - node/install-packages:
           override-ci-command: npm install --no-audit
           app-dir: ~/project/frontend
-      # If you are using yarn instead npm, remove the line above and uncomment the two lines below.
-      # - node/install-packages:
-      #     pkg-manager: yarn
       - run:
           name: Run tests
           command: npm test
-          working_directory: ~/project/frontend   
-      # - checkout
-      # - run:
-      #     name: Run tests
-      #     command: |
-      #       cd frontend/
-      #       npm install
-      #       npm test:unit
+          working_directory: ~/project/frontend
   build_docker_image:
     machine:
       image: ubuntu-2004:202101-01
@@ -47,9 +34,9 @@ jobs:
       - run: 
           name: Build docker image
           command: |
-            cd frontend/ 
-            npm install -g
+            cd frontend/
             npm install -g @ionic/cli
+            npm install --no-audit
             echo -e "VUE_APP_API_URL=https://sample-python-cfd.herokuapp.com/\nVUE_APP_NAME=CFD\nVUE_APP_VERSION=1.0.0" > .env
             ionic build
             docker build -t $DOCKER_LOGIN/frontend -t $DOCKER_LOGIN/frontend:0.1.<< pipeline.number >> .
@@ -112,15 +99,15 @@ workflows:
     when: << pipeline.parameters.run-frontend >>
     jobs:
       - frontend-test
-      # - build_docker_image
-      # - deploy_aws_ecs
-      # - approve_destroy:
-      #     type: approval
-      #     requires:
-      #       - deploy_aws_ecs
-      # - destroy_aws_ecs:
-      #     requires:
-      #       - approve_destroy      
+      - build_docker_image
+      - deploy_aws_ecs
+      - approve_destroy:
+          type: approval
+          requires:
+            - deploy_aws_ecs
+      - destroy_aws_ecs:
+          requires:
+            - approve_destroy      
   backend-test:
     when: << pipeline.parameters.run-backend >>
     jobs:
