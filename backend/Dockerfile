@@ -12,4 +12,6 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 COPY . /usr/src/app
 
 # run entrypoint.sh
-ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+# ENTRYPOINT ["/usr/src/app/entrypoint.sh"]
+
+CMD [ "python", "-m", "openapi_server" ]
