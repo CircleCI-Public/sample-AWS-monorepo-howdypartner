@@ -30,9 +30,11 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
+          app-dir: ~/project/backend/
       - run:
           name: Run tests
           command: pytest
+          working_directory: ~/project/backend/
 
 workflows:
   frontend:
