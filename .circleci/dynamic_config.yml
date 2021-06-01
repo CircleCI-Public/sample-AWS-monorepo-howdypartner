@@ -88,26 +88,25 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
-          app-dir: ./backend
+          app-dir: ~/project/backend
       - run:
           name: Run tests
           command: pytest
-          working_directory: ~/project/backend/
-
+          working_directory: ~/project/backend
 workflows:
   frontend:
     when: << pipeline.parameters.run-frontend >>
     jobs:
       - frontend-test
-      - build_docker_image
-      - deploy_aws_ecs
-      - approve_destroy:
-          type: approval
-          requires:
-            - deploy_aws_ecs
-      - destroy_aws_ecs:
-          requires:
-            - approve_destroy      
+      # - build_docker_image
+      # - deploy_aws_ecs
+      # - approve_destroy:
+      #     type: approval
+      #     requires:
+      #       - deploy_aws_ecs
+      # - destroy_aws_ecs:
+      #     requires:
+      #       - approve_destroy      
   backend-test:
     when: << pipeline.parameters.run-backend >>
     jobs:
