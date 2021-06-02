@@ -1,7 +1,8 @@
 version: 2.1
 orbs:
-  node: circleci/node@4.1     # Used for the Frontend tests
+  node: circleci/node@4.4.0   # Used for the Frontend tests
   python: circleci/python@1.2 # Used for the Backend tests
+  terraform: circleci/terraform@2.0.0  
 
 parameters:
   run-frontend:
@@ -13,16 +14,18 @@ parameters:
 
 jobs:
   frontend-test:
-    docker:
-      - image: cimg/node:15.1
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
     steps:
       - checkout
-      - node/install-packages
+      - node/install-packages:
+          override-ci-command: npm install --no-audit
+          app-dir: ~/project/frontend
       - run:
           name: Run tests
           command: npm test
-
-
+          working_directory: ~/project/frontend
   backend-test:
     docker:
       - image: cimg/python:3.8
@@ -30,17 +33,83 @@ jobs:
       - checkout
       - python/install-packages:
           pkg-manager: pip
-          app-dir: ~/project/backend/
+          app-dir: ./backend
       - run:
           name: Run tests
           command: pytest
-          working_directory: ~/project/backend/
-
+  build_docker_image:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    steps:
+      - checkout
+      - node/install-packages:
+          override-ci-command: npm install --no-audit
+          app-dir: ~/project/frontend      
+      - run: 
+          name: Build docker image
+          command: |
+            cd frontend/
+            npm install -g @ionic/cli
+            echo -e "VUE_APP_API_URL=https://sample-python-cfd.herokuapp.com/\nVUE_APP_NAME=CFD\nVUE_APP_VERSION=1.0.0" > .env
+            ionic build
+            docker build -t $DOCKER_LOGIN/frontend -t $DOCKER_LOGIN/frontend:0.1.<< pipeline.number >> .
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_LOGIN --password-stdin
+            docker push -a $DOCKER_LOGIN/frontend        
+  deploy_aws_ecs:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    steps:
+      - checkout
+      - run:
+          name: Create .terraformrc file locally
+          command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
+      - terraform/install:
+          terraform_version: "0.14.10"
+          arch: "arm64"
+          os: "linux"
+      - terraform/init:
+          path: ./frontend/terraform/ecs
+      - terraform/plan:
+          path: ./frontend/terraform/ecs
+          workspace: ""
+      - terraform/apply:
+          path: ./frontend/terraform/ecs
+          var: "docker_img_name=${DOCKER_LOGIN}/frontend,docker_img_tag=0.1.<< pipeline.number >>"
+  destroy_aws_ecs:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    steps:
+      - checkout
+      - run:
+          name: Create .terraformrc file locally
+          command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
+      - terraform/install:
+          terraform_version: "0.14.2"
+          arch: "arm64"
+          os: "linux"
+      - terraform/init:
+          path: ./frontend/terraform/ecs
+      - terraform/plan:
+          path: ./frontend/terraform/ecs
+      - terraform/destroy:
+          path: ./frontend/terraform/ecs
 workflows:
   frontend:
     when: << pipeline.parameters.run-frontend >>
     jobs:
       - frontend-test
+      - build_docker_image
+      - deploy_aws_ecs
+      - approve_destroy:
+          type: approval
+          requires:
+            - deploy_aws_ecs
+      - destroy_aws_ecs:
+          requires:
+            - approve_destroy      
   backend-test:
     when: << pipeline.parameters.run-backend >>
     jobs:
