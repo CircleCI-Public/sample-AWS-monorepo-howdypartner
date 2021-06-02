@@ -26,6 +26,7 @@ variable "instance_type" {
   default     = "t4g.medium"
   # x386 = t3.medium
   # Amr = t4g.medium
+  
 }
 
 variable "iam_profile" {
