@@ -16,14 +16,14 @@ variable "key_pair" {
 
 variable "ami" {
   description = "Amazon Linux 2 AMI"
-  default     = "ami-0d5eff06f840b45e9"
+  default     = "ami-0c3dda3deab25a563"
   # x86 AMI= ami-0d5eff06f840b45e9
   # Arm AMI= ami-0c3dda3deab25a563
 }
 
 variable "instance_type" {
   description = "AWS Instance type"
-  default     = "t3.medium"
+  default     = "t4g.medium"
   # x386 = t3.medium
   # Amr = t4g.medium
 }
@@ -51,7 +51,7 @@ variable "asg_desired" {
 variable "docker_img_name" {
   type        = string
   description = "Name of the docker image being deployed"  
-  default     = "ariv3ra/aws-frontend-x86"
+  default     = "ariv3ra/aws-frontend-arm64"
 }
 
 variable "docker_img_tag" {
