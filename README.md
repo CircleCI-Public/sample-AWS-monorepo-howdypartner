@@ -1,7 +1,7 @@
 # Sample - CI/CD pipelines for microservices and monorepos on Arm architectures
 
 <!-- Update badges after building on CircleCI -->
-[![CircleCI](https://circleci.com/gh/CircleCI-Public/sample-AWS-HowdyPartner-monorepo.svg?style=svg)](https://circleci.com/gh/CircleCI-Public/sample-AWS-HowdyPartner-monorepo) [![Software License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/CircleCI-Public/sample-python-cfd/main/LICENSE)
+[![Software License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/CircleCI-Public/sample-python-cfd/main/LICENSE)
 
 - [Description](#description)
 - [Getting Started](#getting-started)
