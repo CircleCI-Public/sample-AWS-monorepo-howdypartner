@@ -26,6 +26,18 @@ jobs:
           name: Run tests
           command: npm test
           working_directory: ~/project/frontend
+  backend-test:
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          app-dir: ./backend
+      - run:
+          name: Run tests
+          command: pytest
   build_docker_image:
     machine:
       image: ubuntu-2004:202101-01
@@ -85,17 +97,6 @@ jobs:
           path: ./frontend/terraform/ecs
       - terraform/destroy:
           path: ./frontend/terraform/ecs
-  backend-test:
-    docker:
-      - image: cimg/python:3.8
-    steps:
-      - checkout
-      - python/install-packages:
-          pkg-manager: pip
-          app-dir: ./backend
-      - run:
-          name: Run tests
-          command: pytest
 workflows:
   frontend:
     when: << pipeline.parameters.run-frontend >>
