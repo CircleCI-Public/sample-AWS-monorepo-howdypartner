@@ -2,7 +2,7 @@ version: 2.1
 orbs:
   node: circleci/node@4.4.0   # Used for the Frontend tests
   python: circleci/python@1.2 # Used for the Backend tests
-  terraform: circleci/terraform@2.0.0  
+  terraform: circleci/terraform@2.0.0 # Terraform Orb
 
 parameters:
   run-frontend:
@@ -14,8 +14,9 @@ parameters:
 
 jobs:
   frontend-test:
-    docker:
-      - image: cimg/node:15.1
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
     steps:
       - checkout
       - node/install-packages:
@@ -25,10 +26,21 @@ jobs:
           name: Run tests
           command: npm test
           working_directory: ~/project/frontend
+  backend-test:
+    docker:
+      - image: cimg/python:3.8
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+          app-dir: ./backend
+      - run:
+          name: Run tests
+          command: pytest
   build_docker_image:
     machine:
       image: ubuntu-2004:202101-01
-    resource_class: medium
+    resource_class: arm.medium
     steps:
       - checkout
       - node/install-packages:
@@ -47,7 +59,7 @@ jobs:
   deploy_aws_ecs:
     machine:
       image: ubuntu-2004:202101-01
-    resource_class: medium
+    resource_class: arm.medium
     steps:
       - checkout
       - run:
@@ -55,7 +67,7 @@ jobs:
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
       - terraform/install:
           terraform_version: "0.14.10"
-          arch: "amd64"
+          arch: "arm64"
           os: "linux"
       - terraform/init:
           path: ./frontend/terraform/ecs
@@ -68,7 +80,7 @@ jobs:
   destroy_aws_ecs:
     machine:
       image: ubuntu-2004:202101-01
-    resource_class: medium
+    resource_class: arm.medium
     steps:
       - checkout
       - run:
@@ -76,7 +88,7 @@ jobs:
           command: echo "credentials \"app.terraform.io\" {token = \"$TERRAFORM_TOKEN\"}" > $HOME/.terraformrc
       - terraform/install:
           terraform_version: "0.14.2"
-          arch: "amd64"
+          arch: "arm64"
           os: "linux"
       - terraform/init:
           path: ./frontend/terraform/ecs
@@ -84,18 +96,6 @@ jobs:
           path: ./frontend/terraform/ecs
       - terraform/destroy:
           path: ./frontend/terraform/ecs
-  backend-test:
-    docker:
-      - image: cimg/python:3.8
-    steps:
-      - checkout
-      - python/install-packages:
-          pkg-manager: pip
-          app-dir: ./backend
-      - run:
-          name: Run tests
-          command: |
-            pytest
 workflows:
   frontend:
     when: << pipeline.parameters.run-frontend >>
